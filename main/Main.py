@@ -15,7 +15,11 @@ from decimal import Decimal
 import datetime
 import sacarpdf
 import os
+from gi.repository import Gdk
+from os.path import abspath, dirname, join
 
+
+WHERE_AM_I = abspath(dirname(__file__))
 
 class Restaurante():
     def __init__(self):
@@ -99,7 +103,8 @@ class Restaurante():
         BDres.cargarCli(self.listclientes,self.treeclientes)
         BDres.cargaserv(self.listserv,self.treeserv)
         BDres.cargamesas(self.dictmesas,self.treemesas,self.listmesas)
-        sacarpdf.genfact()
+        self.set_style()
+       # sacarpdf.genfact()
        # self.comboprov.set_entry_text_column(1)
 
     def salir(self,widget,data=None):
@@ -347,6 +352,14 @@ class Restaurante():
             BDres.pagar(self.id,self.idmesa,self.listfact,self.treefact,self.listcom)
             BDres.cargamesas(self.dictmesas,self.treemesas,self.listmesas)
             
+    def set_style(self):
+        """
+        Change Gtk+ Style
+        """
+        settings = Gtk.Settings.get_default()
+        settings.set_property("gtk-theme-name", "Adwaita")
+        settings.set_property("gtk-application-prefer-dark-theme", True)
+
 
 if __name__ == '__main__':
     main = Restaurante()

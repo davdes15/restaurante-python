@@ -207,10 +207,11 @@ def pagar(id,mesa,listfact,treefact,listcom):
     try:
         cur.execute("update facturas set pagada=1 where id ="+str(id))
         cur.execute("update mesas set ocupada=0 where id="+str(mesa))
+        conex.commit()
         checkfacturas(treefact, listfact, mesa)
         listcom.clear()
     except sqlite3.OperationalError as e:
-        print("hola"+e)
+        print(e)
         
         
         
