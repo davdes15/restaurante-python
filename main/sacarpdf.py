@@ -13,7 +13,7 @@ import locale
 
 
 
-def genfact(id=6,camarero="a"):
+def genfact(id=6):
     pdfmetrics.registerFont(TTFont('AnthoniSignature', 'AnthoniSignature.ttf'))
     infofact = BDres.getfact(id)
     c = canvas.Canvas("factura_"+str(id)+".pdf",pagesize=A4)
@@ -29,7 +29,7 @@ def genfact(id=6,camarero="a"):
     c.line(30,815,50,820)
     c.line(565,815,545,820)'''
     #c.drawString(30, 765, "Factura")
-    
+    camarero = BDres.getcamarero(id)
     c.drawCentredString(297.5, 795,"Restaurante David")
     c.setFont("Helvetica", 10)
     c.drawString(30, 710, "Camarero: " + camarero)

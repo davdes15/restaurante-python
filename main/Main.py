@@ -39,6 +39,9 @@ class Restaurante():
         self.entdir = b.get_object("entdir")
         self.entus =b.get_object("entus")
         self.entps=b.get_object("entps")
+        self.entuser = b.get_object("entuser")
+        self.entpasswd = b.get_object("entpasswd")
+        self.entpass2 = b.get_object("entpass2")
         self.entserv =b.get_object("entserv")
         self.entprec = b.get_object("entprec")
         self.lblcamarero = b.get_object("lblcamarero")
@@ -66,7 +69,8 @@ class Restaurante():
         self.listfact = b.get_object("listfact")
         self.treecom = b.get_object("treecom")
         self.listcom = b.get_object("listcom")
-        
+        self.treecamareros = b.get_object("treecamareros")
+        self.listcamarero = b.get_object("listcamarero")
         self.btn41 = b.get_object("btn41")
         self.btn42 = b.get_object("btn42")
         self.btn43 = b.get_object("btn43")
@@ -88,7 +92,7 @@ class Restaurante():
                "on_btnadd_clicked":self.altaprod,"on_treeclientes_cursor_changed":self.selectcli,"on_treeserv_cursor_changed":self.selectprod,
                "on_btnacerr_clicked":self.hide,"on_btnocupar_clicked":self.ocupar,"on_treemesas_cursor_changed":self.verfact,
                "on_treefact_cursor_changed":self.verlineas,"on_btnaddlinea_clicked":self.addlineaf,"on_entps_key_press_event":self.evtlog
-               ,"on_btnpagar_clicked":self.pagar}
+               ,"on_btnpagar_clicked":self.pagar,"on_btnregistrar_clicked":self.registrar}
         
         #relaciona cada boton con el id de la mesa en la base de datos
         self.dictmesas={1:self.btn41,2:self.btn42,3:self.btn81,4:self.btn43,5:self.btn44,6:self.btn82,7:self.btn101,8:self.btn102}
@@ -103,6 +107,7 @@ class Restaurante():
         BDres.cargarCli(self.listclientes,self.treeclientes)
         BDres.cargaserv(self.listserv,self.treeserv)
         BDres.cargamesas(self.dictmesas,self.treemesas,self.listmesas)
+        BDres.cargarcamareros(self.listcamarero,self.treecamareros)
         self.set_style()
        # sacarpdf.genfact()
        # self.comboprov.set_entry_text_column(1)
@@ -122,15 +127,35 @@ class Restaurante():
         user = self.entus.get_text()
         ps = self.entps.get_text()
         res = BDres.login(user,ps)
-        if res[0]:
+        
+        if res:
             self.venprincipal.show()
             self.venprincipal.maximize()
+            
             self.venlogin.hide()
             self.user = user
             self.idcamarero = res[1]
             self.lblcamarero.set_text(user)
         else:
             self.venerrlog.show()
+            
+    def registrar(self,widget):
+        user = self.entuser.get_text()
+        passwd = self.entpasswd.get_text()
+        rpass = self.entpass2.get_text()
+        
+        if user !="" and passwd!="":
+            if passwd == rpass:
+                try:
+                    BDres.registrar(user,passwd,self.listcamarero,self.treecamareros)
+                    self.entuser.set_text("")
+                    self.entpass2.set_text("")
+                    self.entpasswd.set_text("")
+                except:
+                    print("error")
+        
+        
+        
 
     def reserva(self,widget,data=None):
         self.btnactual = widget
@@ -345,7 +370,7 @@ class Restaurante():
         self.entservicio.set_text("")
         
     def pagar(self,widget):
-        sacarpdf.genfact(self.id,self.user)
+        sacarpdf.genfact(self.id)
         dir = os.getcwd()
         os.system('/usr/bin/xdg-open ' + dir + '/factura_'+str(self.id)+'.pdf')
         if self.pagada==0:

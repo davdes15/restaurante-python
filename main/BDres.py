@@ -44,17 +44,49 @@ def cargarCli(listclientes,treeclientes):
         
 def login(user,ps):
     try:
-        cur.execute("select id,nombre,pass from camareros")
+        cur.execute("select id,pass from camareros where nombre = '"+user+"'")
         rows = cur.fetchall()
         
         for row in rows:
-            if pbkdf2_sha256.verify(user,row[1]):
-                if pbkdf2_sha256.verify(ps, row[2]):
-                    return (True,row[0])
+            #if pbkdf2_sha256.verify(user,row[1]):
+            if pbkdf2_sha256.verify(ps, row[1]):
+                return (True,row[0])
                 
         return False
     except sqlite3.OperationalError as e:
         print(e)
+
+def registrar(user,pwd,listcamarero,treecamareros):
+    try:
+        passwd = pbkdf2_sha256.hash(pwd) 
+        fila = (user,passwd)
+        cur.execute("insert into camareros (nombre,pass) values(?,?)",fila)
+        conex.commit()
+        cargarcamareros(listcamarero, treecamareros)
+    except sqlite3.OperationalError as e:
+        print(e)
+
+def getcamarero(idfactura):
+    try:
+        cur.execute("select nombre from camareros where id = (select camarero from facturas where id ='"+str(idfactura)+"')")
+        res = cur.fetchall()
+        
+        return res[0][0]
+    except sqlite3.OperationalError as e:
+        print(e)
+                
+
+def cargarcamareros(listcamarero,treecamareros):
+    try:
+        listcamarero.clear()
+        cur.execute("select id, nombre from camareros")
+        rows = cur.fetchall()
+        for row in rows:
+            listcamarero.append(row)
+            treecamareros.show()
+    except sqlite3.OperationalError as e:
+        print(e)
+    
         
 def altaserv(listserv,treeserv,row):
     try:
