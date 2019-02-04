@@ -28,6 +28,7 @@ class Restaurante():
         self.venprincipal = b.get_object("venprincipal")
         self.venlogin = b.get_object("venlogin")
         self.venerrlog = b.get_object("venerrlog")
+        self.venabout = b.get_object("venabout")
         
         #self.venres = b.get_object("venreservas")
         
@@ -92,7 +93,7 @@ class Restaurante():
                "on_btnadd_clicked":self.altaprod,"on_treeclientes_cursor_changed":self.selectcli,"on_treeserv_cursor_changed":self.selectprod,
                "on_btnacerr_clicked":self.hide,"on_btnocupar_clicked":self.ocupar,"on_treemesas_cursor_changed":self.verfact,
                "on_treefact_cursor_changed":self.verlineas,"on_btnaddlinea_clicked":self.addlineaf,"on_entps_key_press_event":self.evtlog
-               ,"on_btnpagar_clicked":self.pagar,"on_btnregistrar_clicked":self.registrar}
+               ,"on_btnpagar_clicked":self.pagar,"on_btnregistrar_clicked":self.registrar,"on_btnabout_activate":self.about}
         
         #relaciona cada boton con el id de la mesa en la base de datos
         self.dictmesas={1:self.btn41,2:self.btn42,3:self.btn81,4:self.btn43,5:self.btn44,6:self.btn82,7:self.btn101,8:self.btn102}
@@ -100,6 +101,7 @@ class Restaurante():
         
         b.connect_signals(dict)
         self.venerrlog.connect('delete-event', lambda w, e: w.hide() or True)
+        self.venabout.connect('delete-event', lambda w, e: w.hide() or True)
         #self.venprincipal.show()
         #self.venprincipal.maximize()
         self.venlogin.show()
@@ -114,6 +116,10 @@ class Restaurante():
 
     def salir(self,widget,data=None):
         Gtk.main_quit()
+        
+    def about(self,widget):
+        print(self.venabout)
+        self.venabout.show()
         
     def hide(self,widget):
         self.venerrlog.hide()
