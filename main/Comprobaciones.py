@@ -3,6 +3,8 @@ Created on 09/01/2019
 
 @author: a16daviddss
 '''
+
+
 def calcularDNI(dni):
     try:
         tabla = "TRWAGMYFPDXBNJZSQVHLCKE"  # letras del dni

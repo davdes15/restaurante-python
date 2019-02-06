@@ -7,7 +7,7 @@ Created on 19/12/2018
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
-import BDCA,BDres
+import BDCA, BDres
 import Comprobaciones
 import hashlib
 from re import sub
@@ -15,13 +15,17 @@ from decimal import Decimal
 import datetime
 import sacarpdf
 import os
+import getpass
+import zipfile
 from gi.repository import Gdk
 from os.path import abspath, dirname, join
-
+import subprocess
 
 WHERE_AM_I = abspath(dirname(__file__))
 
+
 class Restaurante():
+
     def __init__(self):
         b = Gtk.Builder()
         b.add_from_file("restaurante.glade")
@@ -30,20 +34,20 @@ class Restaurante():
         self.venerrlog = b.get_object("venerrlog")
         self.venabout = b.get_object("venabout")
         
-        #self.venres = b.get_object("venreservas")
+        # self.venres = b.get_object("venreservas")
         
         self.user = None
         self.idcamarero = None
         self.entdni = b.get_object("entdni")
-        self.entnom =b.get_object("entnom")
+        self.entnom = b.get_object("entnom")
         self.entapel = b.get_object("entapel")
         self.entdir = b.get_object("entdir")
-        self.entus =b.get_object("entus")
-        self.entps=b.get_object("entps")
+        self.entus = b.get_object("entus")
+        self.entps = b.get_object("entps")
         self.entuser = b.get_object("entuser")
         self.entpasswd = b.get_object("entpasswd")
         self.entpass2 = b.get_object("entpass2")
-        self.entserv =b.get_object("entserv")
+        self.entserv = b.get_object("entserv")
         self.entprec = b.get_object("entprec")
         self.lblcamarero = b.get_object("lblcamarero")
         self.lblmesa = b.get_object("lblmesa")
@@ -54,9 +58,8 @@ class Restaurante():
         self.pagada = 0
         self.idmesa = 0
         
-        
         self.comboprov = b.get_object("comboprov")
-        self.combomun =b.get_object("combomun")
+        self.combomun = b.get_object("combomun")
         self.listprov = b.get_object("listprov")
         self.listmun = b.get_object("listmun")
         
@@ -83,56 +86,55 @@ class Restaurante():
         self.mesaant = self.btn41
         self.btnactual = self.btn41
         
-    
+        dict = {"on_venlogin_destroy":self.salir, "on_venprincipal_destroy":self.salir, "on_btncanc_clicked":self.salir,
+               "on_btn41_clicked":self.reserva, "on_btn42_clicked":self.reserva, "on_btn43_clicked":self.reserva,
+               "on_btn44_clicked":self.reserva, "on_btn81_clicked":self.reserva, "on_btn82_clicked":self.reserva,
+               "on_btn101_clicked":self.reserva, "on_btn102_clicked":self.reserva, "on_comboprov_changed":self.updatemun,
+               "on_btnalta_clicked":self.altacli, "on_btnacceder_clicked":self.login,
+               "on_btnadd_clicked":self.altaprod, "on_treeclientes_cursor_changed":self.selectcli, "on_treeserv_cursor_changed":self.selectprod,
+               "on_btnacerr_clicked":self.hide, "on_btnocupar_clicked":self.ocupar, "on_treemesas_cursor_changed":self.verfact,
+               "on_treefact_cursor_changed":self.verlineas, "on_btnaddlinea_clicked":self.addlineaf, "on_entps_key_press_event":self.evtlog
+               , "on_btnpagar_clicked":self.pagar, "on_btnregistrar_clicked":self.registrar, "on_btnabout_activate":self.about,
+               "on_menusalir_activate":self.salir, "on_btnbackup_activate":self.backup}
         
-        dict ={"on_venlogin_destroy":self.salir,"on_venprincipal_destroy":self.salir,"on_btncanc_clicked":self.salir,
-               "on_btn41_clicked":self.reserva,"on_btn42_clicked":self.reserva,"on_btn43_clicked":self.reserva,
-               "on_btn44_clicked":self.reserva,"on_btn81_clicked":self.reserva,"on_btn82_clicked":self.reserva,
-               "on_btn101_clicked":self.reserva,"on_btn102_clicked":self.reserva,"on_comboprov_changed":self.updatemun,
-               "on_btnalta_clicked":self.altacli,"on_btnacceder_clicked":self.login,
-               "on_btnadd_clicked":self.altaprod,"on_treeclientes_cursor_changed":self.selectcli,"on_treeserv_cursor_changed":self.selectprod,
-               "on_btnacerr_clicked":self.hide,"on_btnocupar_clicked":self.ocupar,"on_treemesas_cursor_changed":self.verfact,
-               "on_treefact_cursor_changed":self.verlineas,"on_btnaddlinea_clicked":self.addlineaf,"on_entps_key_press_event":self.evtlog
-               ,"on_btnpagar_clicked":self.pagar,"on_btnregistrar_clicked":self.registrar,"on_btnabout_activate":self.about}
-        
-        #relaciona cada boton con el id de la mesa en la base de datos
-        self.dictmesas={1:self.btn41,2:self.btn42,3:self.btn81,4:self.btn43,5:self.btn44,6:self.btn82,7:self.btn101,8:self.btn102}
-        self.dictidmesa={self.btn41:1,self.btn42:2,self.btn81:3,self.btn43:4,self.btn44:5,self.btn82:6,self.btn101:7,self.btn102:8}
+        # relaciona cada boton con el id de la mesa en la base de datos
+        self.dictmesas = {1:self.btn41, 2:self.btn42, 3:self.btn81, 4:self.btn43, 5:self.btn44, 6:self.btn82, 7:self.btn101, 8:self.btn102}
+        self.dictidmesa = {self.btn41:1, self.btn42:2, self.btn81:3, self.btn43:4, self.btn44:5, self.btn82:6, self.btn101:7, self.btn102:8}
         
         b.connect_signals(dict)
         self.venerrlog.connect('delete-event', lambda w, e: w.hide() or True)
         self.venabout.connect('delete-event', lambda w, e: w.hide() or True)
-        #self.venprincipal.show()
-        #self.venprincipal.maximize()
+        # self.venprincipal.show()
+        # self.venprincipal.maximize()
         self.venlogin.show()
         BDCA.cargarCombo(self.listprov)
-        BDres.cargarCli(self.listclientes,self.treeclientes)
-        BDres.cargaserv(self.listserv,self.treeserv)
-        BDres.cargamesas(self.dictmesas,self.treemesas,self.listmesas)
-        BDres.cargarcamareros(self.listcamarero,self.treecamareros)
+        BDres.cargarCli(self.listclientes, self.treeclientes)
+        BDres.cargaserv(self.listserv, self.treeserv)
+        BDres.cargamesas(self.dictmesas, self.treemesas, self.listmesas)
+        BDres.cargarcamareros(self.listcamarero, self.treecamareros)
         self.set_style()
        # sacarpdf.genfact()
        # self.comboprov.set_entry_text_column(1)
 
-    def salir(self,widget,data=None):
+    def salir(self, widget, data=None):
         Gtk.main_quit()
         
-    def about(self,widget):
+    def about(self, widget):
         print(self.venabout)
         self.venabout.show()
         
-    def hide(self,widget):
+    def hide(self, widget):
         self.venerrlog.hide()
         
-    def evtlog(self,window,event):
+    def evtlog(self, window, event):
         
         if event.keyval == 65293:
             self.login(window)
     
-    def login(self,widget,data=None):
+    def login(self, widget, data=None):
         user = self.entus.get_text()
         ps = self.entps.get_text()
-        res = BDres.login(user,ps)
+        res = BDres.login(user, ps)
         
         if res:
             self.venprincipal.show()
@@ -145,25 +147,22 @@ class Restaurante():
         else:
             self.venerrlog.show()
             
-    def registrar(self,widget):
+    def registrar(self, widget):
         user = self.entuser.get_text()
         passwd = self.entpasswd.get_text()
         rpass = self.entpass2.get_text()
         
-        if user !="" and passwd!="":
+        if user != "" and passwd != "":
             if passwd == rpass:
                 try:
-                    BDres.registrar(user,passwd,self.listcamarero,self.treecamareros)
+                    BDres.registrar(user, passwd, self.listcamarero, self.treecamareros)
                     self.entuser.set_text("")
                     self.entpass2.set_text("")
                     self.entpasswd.set_text("")
                 except:
                     print("error")
-        
-        
-        
 
-    def reserva(self,widget,data=None):
+    def reserva(self, widget, data=None):
         self.btnactual = widget
         
         if not BDres.checkOcupada(self.dictidmesa[self.mesaant]):
@@ -218,16 +217,15 @@ class Restaurante():
             widget.get_image().set_from_file("./mesa10oc.png")
             widget.set_sensitive(False)
         
-        #self.venres.show()
-        #self.combomun.set_sensitive(False)
+        # self.venres.show()
+        # self.combomun.set_sensitive(False)
       
-    def updatemun(self,widget,data=None):
-        
+    def updatemun(self, widget, data=None):
        
         prov = self.comboprov.get_active()
-        BDCA.cargarmun(self.listmun,prov)
+        BDCA.cargarmun(self.listmun, prov)
     
-    def altacli(self,widget,data=None):
+    def altacli(self, widget, data=None):
         dni = self.entdni.get_text()
         nom = self.entnom.get_text()
         apel = self.entapel.get_text()
@@ -243,8 +241,8 @@ class Restaurante():
                         mod = self.combomun.get_model()
                         mun = mod[index][:2][0]
                         
-                        fila =(dni,nom,apel,dir,prov,mun)
-                        BDres.altaCliente(self.listclientes,self.treeclientes,fila)
+                        fila = (dni, nom, apel, dir, prov, mun)
+                        BDres.altaCliente(self.listclientes, self.treeclientes, fila)
                         self.cleanCli()
                     else:
                         print("No seleccionado el municipio")
@@ -252,22 +250,21 @@ class Restaurante():
                     print("No seleccionada la provincia")
                 
             else:
-                #cambiar por popup
+                # cambiar por popup
                 print("debes cubrir todos los campos")
         else:
             print("error")
             
+            # para reactivar los botones
+            # self.btnactual.set_sensitive(True)
+            # self.cambiobtn(self.btnactual)
             
-            #para reactivar los botones
-            #self.btnactual.set_sensitive(True)
-            #self.cambiobtn(self.btnactual)
-            
-            #para guardar la contraseña
-            #import hashlib
+            # para guardar la contraseña
+            # import hashlib
 
-            #sh = hashlib.sha1()
-            #sh.update('password')
-            #hash_value = sh.hexdigest()
+            # sh = hashlib.sha1()
+            # sh.update('password')
+            # hash_value = sh.hexdigest()
             
     def cleanCli(self):
         self.entdni.set_text("")
@@ -282,38 +279,36 @@ class Restaurante():
         self.entserv.set_text("")
         self.entprec.set_text("")
             
-    def altaprod(self,widget,data=None):
+    def altaprod(self, widget, data=None):
         prod = self.entserv.get_text()
         prec = float(self.entprec.get_text())
-        row = (prod,prec)
-        BDres.altaserv(self.listserv,self.treeserv,row)
+        row = (prod, prec)
+        BDres.altaserv(self.listserv, self.treeserv, row)
         self.cleanProd()
-        
     
-    def selectcli(self,widget):
+    def selectcli(self, widget):
         sel = self.treeclientes.get_selection()
-        (tm,ti) =sel.get_selected()
-        dni= tm.get_value(ti,0)
-        nombre = tm.get_value(ti,1)
-        apel = tm.get_value(ti,2)
-        dir = tm.get_value(ti,3)
+        (tm, ti) = sel.get_selected()
+        dni = tm.get_value(ti, 0)
+        nombre = tm.get_value(ti, 1)
+        apel = tm.get_value(ti, 2)
+        dir = tm.get_value(ti, 3)
         self.entdni.set_text(dni)
         self.entapel.set_text(apel)
         self.entdir.set_text(dir)
         self.entnom.set_text(nombre)
         
-    def selectprod(self,widget):
+    def selectprod(self, widget):
         sel = self.treeserv.get_selection()
-        (tm,ti) =sel.get_selected()
-        prod = tm.get_value(ti,1)
-        prec = Decimal(sub(r'[^\d.]','',tm.get_value(ti,2)))/100
-        self.servicio = tm.get_value(ti,0)
+        (tm, ti) = sel.get_selected()
+        prod = tm.get_value(ti, 1)
+        prec = Decimal(sub(r'[^\d.]', '', tm.get_value(ti, 2))) / 100
+        self.servicio = tm.get_value(ti, 0)
         self.entserv.set_text(prod)
         self.entservicio.set_text(prod)
         self.entprec.set_text(str(prec))
-        
     
-    def cambiobtn(self,widget):
+    def cambiobtn(self, widget):
         if widget == self.btn41:
             widget.get_image().set_from_file("./mesa4vacia.png")
           
@@ -338,83 +333,74 @@ class Restaurante():
         else:
             widget.get_image().set_from_file("./mesa10vacia.png")
            
-    #metodo para ocupar la mesa
-    def ocupar(self,widget,data=None):
+    # metodo para ocupar la mesa
+    def ocupar(self, widget, data=None):
         sel = self.treeclientes.get_selection()
-        (tm,ti) =sel.get_selected()
+        (tm, ti) = sel.get_selected()
         cliente = "anonimo"
         if ti is not None:
-            cliente = tm.get_value(ti,0)
+            cliente = tm.get_value(ti, 0)
         mesa = self.lblmesa.get_text()
         if mesa is not None:
-            fila=(cliente,self.idcamarero,mesa,datetime.date.today())
-            BDres.insmesa(self.dictmesas,self.treemesas,self.listmesas,fila)
+            fila = (cliente, self.idcamarero, mesa, datetime.date.today())
+            BDres.insmesa(self.dictmesas, self.treemesas, self.listmesas, fila)
             
-    def verfact(self,widget):
+    def verfact(self, widget):
         sel = self.treemesas.get_selection()
         self.listcom.clear()
         self.entud.set_editable(False)
-        (tm,ti) = sel.get_selected()
+        (tm, ti) = sel.get_selected()
         if ti is not None:
-            self.idmesa = tm.get_value(ti,0)
-            BDres.checkfacturas(self.treefact,self.listfact,self.idmesa)
+            self.idmesa = tm.get_value(ti, 0)
+            BDres.checkfacturas(self.treefact, self.listfact, self.idmesa)
             
-    def verlineas(self,widget,data=None):
+    def verlineas(self, widget, data=None):
         self.entud.set_editable(True)
         sel = self.treefact.get_selection()
-        (tm,ti) = sel.get_selected()
+        (tm, ti) = sel.get_selected()
         if ti is not None:
-            self.id = tm.get_value(ti,0)
-            self.pagada = 1 if tm.get_value(ti,5) == "SI" else 0
-            BDres.verlineas(self.treecom,self.listcom,self.id)
+            self.id = tm.get_value(ti, 0)
+            self.pagada = 1 if tm.get_value(ti, 5) == "SI" else 0
+            BDres.verlineas(self.treecom, self.listcom, self.id)
             
-    def addlineaf(self,widget):
+    def addlineaf(self, widget):
         unidades = int(self.entud.get_text())
-        fila = (int(self.id),int(self.servicio),unidades)
-        BDres.addlinea(self.treecom,self.listcom,fila)
+        fila = (int(self.id), int(self.servicio), unidades)
+        BDres.addlinea(self.treecom, self.listcom, fila)
         self.entud.set_text("")
         self.entservicio.set_text("")
         
-    def pagar(self,widget):
+    def pagar(self, widget):
         sacarpdf.genfact(self.id)
         dir = os.getcwd()
-        os.system('/usr/bin/xdg-open ' + dir + '/factura_'+str(self.id)+'.pdf')
-        if self.pagada==0:
-            BDres.pagar(self.id,self.idmesa,self.listfact,self.treefact,self.listcom)
-            BDres.cargamesas(self.dictmesas,self.treemesas,self.listmesas)
-            
+        os.system('/usr/bin/xdg-open ' + dir + '/factura_' + str(self.id) + '.pdf')
+        if self.pagada == 0:
+            BDres.pagar(self.id, self.idmesa, self.listfact, self.treefact, self.listcom)
+            BDres.cargamesas(self.dictmesas, self.treemesas, self.listmesas)
+    
+    def backup(self, widget):
+        '''
+        El metodo crea una copia de seguridad de la base de datos
+        y despues nos abre una el directorio en el que se encuentra
+        '''
+        fecha = datetime.date.today()
+        if not os.path.exists('/home/' + getpass.getuser() + '/copias'):
+            os.mkdir('/home/' + getpass.getuser() + '/copias', mode=0o777, dir_fd=None)
+        fichzip = zipfile.ZipFile('/home/' + getpass.getuser() + '/copias/' + 'bd_restaurante' + str(fecha) + "_copia.zip", 'w')
+        fichzip.write("Restaurante", "./Restaurante" , zipfile.ZIP_DEFLATED)  
+        fichzip.close() 
+        subprocess.Popen(["xdg-open", '/home/' + getpass.getuser() + '/copias/'])
+    
     def set_style(self):
         """
         Change Gtk+ Style
         """
         settings = Gtk.Settings.get_default()
-        settings.set_property("gtk-theme-name", "Adwaita")
-        settings.set_property("gtk-application-prefer-dark-theme", True)
-
+        settings.set_property("gtk-theme-name", "Mc0S-Color-Concept")
+        settings.set_property("gtk-application-prefer-dark-theme", False)
+    
 
 if __name__ == '__main__':
     main = Restaurante()
     Gtk.main()
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     

@@ -12,8 +12,6 @@ import GestionMesas
 import GestionFacturas
 from gi.overrides.Gtk import Gtk
 
-
-
 # este bloque de codigo nos conecta a la base de datos
 try:
     bd = 'Restaurante'
@@ -24,51 +22,55 @@ except sqlite3.OperationalError as e:
     print(e)
     
     
-def altaCliente(listclientes,treeclientes,row):
+def altaCliente(listclientes, treeclientes, row):
     try:
-        cur.execute("insert into clientes (dni,nombre,apellidos,direccion,provincia,ciudad) values(?,?,?,?,?,?)",row)
+        cur.execute("insert into clientes (dni,nombre,apellidos,direccion,provincia,ciudad) values(?,?,?,?,?,?)", row)
         conex.commit()
-        GestionClientes.altacli(listclientes,treeclientes,row)
+        GestionClientes.altacli(listclientes, treeclientes, row)
     except sqlite3.OperationalError as e:
         print (e)
+
         
-def cargarCli(listclientes,treeclientes):
+def cargarCli(listclientes, treeclientes):
     try:
         cur.execute("select * from clientes")
         listclientes.clear()
         rows = cur.fetchall()
         for row in rows:
-            GestionClientes.altacli(listclientes,treeclientes,row)
+            GestionClientes.altacli(listclientes, treeclientes, row)
     except sqlite3.OperationalError as e:
         print(e)
+
         
-def login(user,ps):
+def login(user, ps):
     try:
-        cur.execute("select id,pass from camareros where nombre = '"+user+"'")
+        cur.execute("select id,pass from camareros where nombre = '" + user + "'")
         rows = cur.fetchall()
         
         for row in rows:
-            #if pbkdf2_sha256.verify(user,row[1]):
+            # if pbkdf2_sha256.verify(user,row[1]):
             if pbkdf2_sha256.verify(ps, row[1]):
-                return (True,row[0])
+                return (True, row[0])
                 
         return False
     except sqlite3.OperationalError as e:
         print(e)
 
-def registrar(user,pwd,listcamarero,treecamareros):
+
+def registrar(user, pwd, listcamarero, treecamareros):
     try:
         passwd = pbkdf2_sha256.hash(pwd) 
-        fila = (user,passwd)
-        cur.execute("insert into camareros (nombre,pass) values(?,?)",fila)
+        fila = (user, passwd)
+        cur.execute("insert into camareros (nombre,pass) values(?,?)", fila)
         conex.commit()
         cargarcamareros(listcamarero, treecamareros)
     except sqlite3.OperationalError as e:
         print(e)
 
+
 def getcamarero(idfactura):
     try:
-        cur.execute("select nombre from camareros where id = (select camarero from facturas where id ='"+str(idfactura)+"')")
+        cur.execute("select nombre from camareros where id = (select camarero from facturas where id ='" + str(idfactura) + "')")
         res = cur.fetchall()
         
         return res[0][0]
@@ -76,7 +78,7 @@ def getcamarero(idfactura):
         print(e)
                 
 
-def cargarcamareros(listcamarero,treecamareros):
+def cargarcamareros(listcamarero, treecamareros):
     try:
         listcamarero.clear()
         cur.execute("select id, nombre from camareros")
@@ -88,9 +90,9 @@ def cargarcamareros(listcamarero,treecamareros):
         print(e)
     
         
-def altaserv(listserv,treeserv,row):
+def altaserv(listserv, treeserv, row):
     try:
-        cur.execute("insert into servicios (servicio,precio) values(?,?)",row)
+        cur.execute("insert into servicios (servicio,precio) values(?,?)", row)
         conex.commit()
         cur.execute("select count(*) from servicios")
         fila = []
@@ -100,36 +102,35 @@ def altaserv(listserv,treeserv,row):
         fila.append(row[0])
         locale.setlocale(locale.LC_ALL, '')
         fila.append(locale.currency(row[1]))
-        GestionProd.altaserv(listserv,treeserv,fila)
+        GestionProd.altaserv(listserv, treeserv, fila)
     except sqlite3.OperationalError as e:
         print(e)
         
         
-def cargaserv(listserv,treeserv):
+def cargaserv(listserv, treeserv):
     try:
         cur.execute("select * from servicios")
         rows = cur.fetchall()
         for row in rows:
-            fila =[]
+            fila = []
             fila.append(row[0])
             fila.append(row[1])
             locale.setlocale(locale.LC_MONETARY, '')
             fila.append(locale.currency(row[2]))
-            GestionProd.altaserv(listserv,treeserv,fila)
+            GestionProd.altaserv(listserv, treeserv, fila)
     except sqlite3.OperationalError as e:
         print(e)
         
         
-        
-def cargamesas(dicmesas,treemesas,listmesas):
+def cargamesas(dicmesas, treemesas, listmesas):
     try:
         cur.execute("select * from mesas")
         rows = cur.fetchall()
         listmesas.clear()
-        ocupada ="no"
+        ocupada = "no"
         for row in rows:
             if row[2] == 1:
-                ocupada="si"
+                ocupada = "si"
                 dicmesas[row[0]].set_sensitive(False)
                 if row[1] == 4:
                     dicmesas[row[0]].get_image().set_from_file("./mesa4oc.png")
@@ -146,53 +147,56 @@ def cargamesas(dicmesas,treemesas,listmesas):
                     dicmesas[row[0]].get_image().set_from_file("./mesa8vaciav2.png")
                 else:
                     dicmesas[row[0]].get_image().set_from_file("./mesa10vacia.png")
-            fila = (row[0],row[1],ocupada)
-            GestionMesas.insertarmesa(treemesas,listmesas,fila)
+            fila = (row[0], row[1], ocupada)
+            GestionMesas.insertarmesa(treemesas, listmesas, fila)
         
     except sqlite3.OperationalError as e:
         print (e)
+
         
-def insmesa(dicmesas,treemesas,listmesas,fila):
+def insmesa(dicmesas, treemesas, listmesas, fila):
     try:
-        cur.execute("update mesas set ocupada = 1 where id = "+fila[2]+"")
-        cur.execute("insert into facturas (cliente,camarero,mesa,fecha) values(?,?,?,?)",fila)
+        cur.execute("update mesas set ocupada = 1 where id = " + fila[2] + "")
+        cur.execute("insert into facturas (cliente,camarero,mesa,fecha) values(?,?,?,?)", fila)
         conex.commit()
         listmesas.clear()
-        cargamesas(dicmesas,treemesas,listmesas)
+        cargamesas(dicmesas, treemesas, listmesas)
     except sqlite3.OperationalError as e:
         print (e) 
+
         
 def checkOcupada(mesa):
     try:
-        cur.execute("select ocupada from mesas where id = "+str(mesa))
+        cur.execute("select ocupada from mesas where id = " + str(mesa))
         rows = cur.fetchall()
         if rows[0][0] == 1:
             return True
         return False
     except sqlite3.OperationalError as e:
         print(e)
+
         
-def checkfacturas(treefact,listfact,id):
+def checkfacturas(treefact, listfact, id):
     try:
-        cur.execute("select * from facturas where mesa="+str(id))
+        cur.execute("select * from facturas where mesa=" + str(id))
         rows = cur.fetchall()
         listfact.clear()
         for row in rows:
             if row[5] == 0:
-                fila = (row[0],row[1],row[2],row[3],row[4],"NO")
+                fila = (row[0], row[1], row[2], row[3], row[4], "NO")
                 print(fila)
-                GestionFacturas.insfact(treefact,listfact,fila)
+                GestionFacturas.insfact(treefact, listfact, fila)
             else:
-                fila = (row[0],row[1],row[2],row[3],row[4],"SI")
-                GestionFacturas.insfact(treefact,listfact,fila)
+                fila = (row[0], row[1], row[2], row[3], row[4], "SI")
+                GestionFacturas.insfact(treefact, listfact, fila)
     except sqlite3.OperationalError as e:
         print(e)
         
        
-def verlineas(treelineas,listlineas,id):
+def verlineas(treelineas, listlineas, id):
     try:
-        cur.execute("select idventa,factura,(select servicio from servicios where id = producto),cantidad from lineasfactura where factura="+str(id)) 
-        rows=cur.fetchall()
+        cur.execute("select idventa,factura,(select servicio from servicios where id = producto),cantidad from lineasfactura where factura=" + str(id)) 
+        rows = cur.fetchall()
         listlineas.clear()
         for row in rows:
             print(row)
@@ -201,18 +205,20 @@ def verlineas(treelineas,listlineas,id):
     except sqlite3.OperationalError as e:
         print(e)   
 
-def addlinea(treelineas,listlineas,fila):
+
+def addlinea(treelineas, listlineas, fila):
     try:
-        cur.execute("insert into lineasfactura (factura,producto,cantidad) values(?,?,?)",fila)
+        cur.execute("insert into lineasfactura (factura,producto,cantidad) values(?,?,?)", fila)
         conex.commit()
         listlineas.clear()
         verlineas(treelineas, listlineas, fila[0])
     except sqlite3.OperationalError as e:
         print(e)
+
         
 def getfact(id):
     try:
-        cur.execute("select * from facturas where id ="+str(id))
+        cur.execute("select * from facturas where id =" + str(id))
         f = cur.fetchall()
         return f[0]
     except sqlite3.OperationalError as e:
@@ -221,36 +227,29 @@ def getfact(id):
         
 def getlineas(id):
     try:
-        cur.execute("select * from lineasfactura where factura="+str(id))
+        cur.execute("select * from lineasfactura where factura=" + str(id))
         f = cur.fetchall()
         return f
     except sqlite3.OperationalError as e:
         print(e)
+
         
 def getnompre(idp):
     try:
-        cur.execute("select servicio,precio from servicios where id="+str(idp))
+        cur.execute("select servicio,precio from servicios where id=" + str(idp))
         f = cur.fetchone()
         return f
     except sqlite3.OperationalError as e:
         print(e) 
 
-def pagar(id,mesa,listfact,treefact,listcom):
+
+def pagar(id, mesa, listfact, treefact, listcom):
     try:
-        cur.execute("update facturas set pagada=1 where id ="+str(id))
-        cur.execute("update mesas set ocupada=0 where id="+str(mesa))
+        cur.execute("update facturas set pagada=1 where id =" + str(id))
+        cur.execute("update mesas set ocupada=0 where id=" + str(mesa))
         conex.commit()
         checkfacturas(treefact, listfact, mesa)
         listcom.clear()
     except sqlite3.OperationalError as e:
         print(e)
-        
-        
-        
-        
-        
-        
-        
-        
-        
         

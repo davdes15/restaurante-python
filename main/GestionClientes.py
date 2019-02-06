@@ -5,6 +5,6 @@ Created on 10/01/2019
 '''
 
 
-def altacli(listclientes,treeclientes,row):
+def altacli(listclientes, treeclientes, row):
     listclientes.append(row)
     treeclientes.show()
