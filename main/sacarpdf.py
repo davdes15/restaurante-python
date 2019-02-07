@@ -10,6 +10,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import BDres
 import locale
+from reportlab.lib.units import inch
 
 
 def genfact(id=6):
@@ -30,7 +31,10 @@ def genfact(id=6):
     c.line(30,815,50,820)
     c.line(565,815,545,820)'''
     # c.drawString(30, 765, "Factura")
+    centrox,centroy = A4[0]/2,A4[1]/2
     camarero = BDres.getcamarero(id)
+    #aqui añado la imagen para que el texto quede por encima
+    c.drawImage("./hkwm2.png", 120.75, centroy-200, 5*inch, 5*inch)
     c.drawCentredString(297.5, 795, "Restaurante David")
     c.setFont("Helvetica", 10)
     c.drawString(30, 710, "Camarero: " + camarero)
