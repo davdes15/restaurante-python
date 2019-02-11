@@ -20,6 +20,7 @@ import zipfile
 from gi.repository import Gdk
 from os.path import abspath, dirname, join
 import subprocess
+from pygame import mixer
 
 WHERE_AM_I = abspath(dirname(__file__))
 
@@ -33,6 +34,7 @@ class Restaurante():
         self.venlogin = b.get_object("venlogin")
         self.venerrlog = b.get_object("venerrlog")
         self.venabout = b.get_object("venabout")
+        self.vendialog = b.get_object("vendialog")
         
         # self.venres = b.get_object("venreservas")
         
@@ -57,6 +59,7 @@ class Restaurante():
         self.id = 0
         self.pagada = 0
         self.idmesa = 0
+        self.lblerr = b.get_object("lblerr")
         
         self.comboprov = b.get_object("comboprov")
         self.combomun = b.get_object("combomun")
@@ -85,6 +88,8 @@ class Restaurante():
         self.btn102 = b.get_object("btn102")
         self.mesaant = self.btn41
         self.btnactual = self.btn41
+        mixer.init()
+        mixer.music.load("./sonido.mp3")
         
         dict = {"on_venlogin_destroy":self.salir, "on_venprincipal_destroy":self.salir, "on_btncanc_clicked":self.salir,
                "on_btn41_clicked":self.reserva, "on_btn42_clicked":self.reserva, "on_btn43_clicked":self.reserva,
@@ -95,7 +100,7 @@ class Restaurante():
                "on_btnacerr_clicked":self.hide, "on_btnocupar_clicked":self.ocupar, "on_treemesas_cursor_changed":self.verfact,
                "on_treefact_cursor_changed":self.verlineas, "on_btnaddlinea_clicked":self.addlineaf, "on_entps_key_press_event":self.evtlog
                , "on_btnpagar_clicked":self.pagar, "on_btnregistrar_clicked":self.registrar, "on_btnabout_activate":self.about,
-               "on_menusalir_activate":self.salir, "on_btnbackup_activate":self.backup}
+               "on_menusalir_activate":self.salir, "on_btnbackup_activate":self.backup,"on_btncerrdialog_clicked":self.hidedialog}
         
         # relaciona cada boton con el id de la mesa en la base de datos
         self.dictmesas = {1:self.btn41, 2:self.btn42, 3:self.btn81, 4:self.btn43, 5:self.btn44, 6:self.btn82, 7:self.btn101, 8:self.btn102}
@@ -104,6 +109,7 @@ class Restaurante():
         b.connect_signals(dict)
         self.venerrlog.connect('delete-event', lambda w, e: w.hide() or True)
         self.venabout.connect('delete-event', lambda w, e: w.hide() or True)
+        self.vendialog.connect('delete-event', lambda w, e: w.hide() or True)
         # self.venprincipal.show()
         # self.venprincipal.maximize()
         self.venlogin.show()
@@ -126,6 +132,10 @@ class Restaurante():
     def hide(self, widget):
         self.venerrlog.hide()
         
+    def hidedialog(self,widget,data=None):
+        self.vendialog.hide()
+        
+        
     def evtlog(self, window, event):
         
         if event.keyval == 65293:
@@ -145,7 +155,9 @@ class Restaurante():
             self.idcamarero = res[1]
             self.lblcamarero.set_text(user)
         else:
+            mixer.music.play()
             self.venerrlog.show()
+            
             
     def registrar(self, widget):
         user = self.entuser.get_text()
@@ -246,14 +258,25 @@ class Restaurante():
                         self.cleanCli()
                     else:
                         print("No seleccionado el municipio")
+                        self.lblerr.set_text("No seleccionado el municipio")
+                        self.vendialog.show()
+                        mixer.music.play()
                 else:
                     print("No seleccionada la provincia")
+                    self.lblerr.set_text("No seleccionado la provincia")
+                    self.vendialog.show()
+                    mixer.music.play()
                 
             else:
                 # cambiar por popup
-                print("debes cubrir todos los campos")
+                print("Debes cubrir todos los campos")
+                self.lblerr.set_text("Debes cubrir todos los campos")
+                self.vendialog.show()
+                mixer.music.play()
         else:
-            print("error")
+            self.lblerr.set_text("DNI incorrecto")
+            self.vendialog.show()
+            mixer.music.play()
             
             # para reactivar los botones
             # self.btnactual.set_sensitive(True)
@@ -297,6 +320,12 @@ class Restaurante():
         self.entapel.set_text(apel)
         self.entdir.set_text(dir)
         self.entnom.set_text(nombre)
+        provincia = BDCA.recuperarprovincia(tm.get_value(ti,4))
+        self.comboprov.set_active(provincia)
+        municipio = BDCA.recuperarmunicipio(provincia,tm.get_value(ti,5))
+        print(municipio)
+        
+        self.combomun.set_active(municipio-1)
         
     def selectprod(self, widget):
         sel = self.treeserv.get_selection()
@@ -364,11 +393,21 @@ class Restaurante():
             BDres.verlineas(self.treecom, self.listcom, self.id)
             
     def addlineaf(self, widget):
-        unidades = int(self.entud.get_text())
-        fila = (int(self.id), int(self.servicio), unidades)
-        BDres.addlinea(self.treecom, self.listcom, fila)
-        self.entud.set_text("")
-        self.entservicio.set_text("")
+        try:
+            unidades = int(self.entud.get_text())
+            if self.pagada == 0:
+                fila = (int(self.id), int(self.servicio), unidades)
+                BDres.addlinea(self.treecom, self.listcom, fila)
+                self.entud.set_text("")
+                self.entservicio.set_text("")
+            else:
+                self.lblerr.set_text("Esa factura ya está pagada")
+                self.vendialog.show()
+                mixer.music.play()
+        except:
+            self.lblerr.set_text("Debe introducir un entero")
+            self.vendialog.show()
+            mixer.music.play()
         
     def pagar(self, widget):
         sacarpdf.genfact(self.id)

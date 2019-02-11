@@ -14,6 +14,9 @@ from reportlab.lib.units import inch
 
 
 def genfact(id=6):
+    """
+        Genera la factura del id especificado, si no se especifica la genera del 6 por pruebas
+    """
     pdfmetrics.registerFont(TTFont('AnthoniSignature', 'AnthoniSignature.ttf'))
     # pdfmetrics.registerFont(TTFont('LongLiner', 'LongLiner.ttf'))
 

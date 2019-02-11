@@ -208,8 +208,16 @@ def verlineas(treelineas, listlineas, id):
 
 def addlinea(treelineas, listlineas, fila):
     try:
-        cur.execute("insert into lineasfactura (factura,producto,cantidad) values(?,?,?)", fila)
-        conex.commit()
+        cur.execute("select * from lineasfactura where factura = "+str(fila[0])+" and producto = "+str(fila[1]))
+        lin = cur.fetchall()
+        print("a")
+        if lin !=[]:
+            print(str(lin[0][2]+fila[2]))
+            cur.execute("update lineasfactura set cantidad = "+str(lin[0][3]+fila[2]) +" where producto ="+str(fila[1]))
+            conex.commit()
+        else:    
+            cur.execute("insert into lineasfactura (factura,producto,cantidad) values(?,?,?)", fila)
+            conex.commit()
         listlineas.clear()
         verlineas(treelineas, listlineas, fila[0])
     except sqlite3.OperationalError as e:
@@ -218,7 +226,7 @@ def addlinea(treelineas, listlineas, fila):
         
 def getfact(id):
     try:
-        cur.execute("select * from facturas where id =" + str(id))
+        cur.execute("select * from facturas where id =" + strs(id))
         f = cur.fetchall()
         return f[0]
     except sqlite3.OperationalError as e:
@@ -252,4 +260,5 @@ def pagar(id, mesa, listfact, treefact, listcom):
         listcom.clear()
     except sqlite3.OperationalError as e:
         print(e)
+
         
