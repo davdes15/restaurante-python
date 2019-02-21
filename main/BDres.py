@@ -43,6 +43,11 @@ def cargarCli(listclientes, treeclientes):
 
         
 def login(user, ps):
+    """
+        Recibe un usuario y contraseña de la ventana de login, busca el usuario y la contraseña en la base de datos,
+        comprueba lo que recibe coincide lo que hay en la base de datos mediante el metodo pbkdf2_sha256.verify("texto",hash),
+        de la libreria passlib y devuelve True y el id del camarero si es correcto o False si el login no es correcto.
+    """
     try:
         cur.execute("select id,pass from camareros where nombre = '" + user + "'")
         rows = cur.fetchall()
@@ -58,6 +63,9 @@ def login(user, ps):
 
 
 def registrar(user, pwd, listcamarero, treecamareros):
+    """
+        obtiene el hash de la contraseña que recibe y añade al camarero a la base de datos si no existe ya
+    """
     try:
         passwd = pbkdf2_sha256.hash(pwd) 
         fila = (user, passwd)
@@ -81,7 +89,7 @@ def getcamarero(idfactura):
 def cargarcamareros(listcamarero, treecamareros):
     try:
         listcamarero.clear()
-        cur.execute("select id, nombre from camareros")
+        cur.execute("select id, nombre from camareros order by id")
         rows = cur.fetchall()
         for row in rows:
             listcamarero.append(row)
@@ -175,6 +183,15 @@ def checkOcupada(mesa):
     except sqlite3.OperationalError as e:
         print(e)
 
+def modprecio(serv,preci,treeserv,listserv):
+    try:
+        cur.execute("update servicios set precio="+str(preci)+" where id = "+str(serv))
+        conex.commit()
+        listserv.clear()
+        cargaserv(listserv, treeserv)
+    except sqlite3.OperationalError as e:
+        print(e)
+
         
 def checkfacturas(treefact, listfact, id):
     try:
@@ -226,7 +243,7 @@ def addlinea(treelineas, listlineas, fila):
         
 def getfact(id):
     try:
-        cur.execute("select * from facturas where id =" + strs(id))
+        cur.execute("select * from facturas where id =" + str(id))
         f = cur.fetchall()
         return f[0]
     except sqlite3.OperationalError as e:

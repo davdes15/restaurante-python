@@ -4,6 +4,7 @@ Created on 19/12/2018
 @author: a16daviddss
 '''
 
+
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
@@ -100,7 +101,8 @@ class Restaurante():
                "on_btnacerr_clicked":self.hide, "on_btnocupar_clicked":self.ocupar, "on_treemesas_cursor_changed":self.verfact,
                "on_treefact_cursor_changed":self.verlineas, "on_btnaddlinea_clicked":self.addlineaf, "on_entps_key_press_event":self.evtlog
                , "on_btnpagar_clicked":self.pagar, "on_btnregistrar_clicked":self.registrar, "on_btnabout_activate":self.about,
-               "on_menusalir_activate":self.salir, "on_btnbackup_activate":self.backup,"on_btncerrdialog_clicked":self.hidedialog}
+               "on_menusalir_activate":self.salir, "on_btnbackup_activate":self.backup,"on_btncerrdialog_clicked":self.hidedialog,
+               "on_btnmodprecio_clicked":self.modprecio}
         
         # relaciona cada boton con el id de la mesa en la base de datos
         self.dictmesas = {1:self.btn41, 2:self.btn42, 3:self.btn81, 4:self.btn43, 5:self.btn44, 6:self.btn82, 7:self.btn101, 8:self.btn102}
@@ -142,7 +144,12 @@ class Restaurante():
             self.login(window)
     
     def login(self, widget, data=None):
-        user = self.entus.get_text()
+        """
+            Recoge el usuario y la contraseña de los cuadros de texto y se los envía al metodo login, 
+            si son correctos accede a la ventana principal y guarda el id del camarero en una variable,
+            si no sacará un aviso dicienndo que el usuario o la contraseña son incorrectos
+        """
+        user = self.entus.get_text().strip()
         ps = self.entps.get_text()
         res = BDres.login(user, ps)
         
@@ -160,6 +167,11 @@ class Restaurante():
             
             
     def registrar(self, widget):
+        """
+            Recoge el usuario y la contraseña dos veces, si no hay nada en blanco y las contraseñas
+            coinciden la envía al metodo registrar de BDres, si el usuario es registrado se limpian los campos,
+            si se da un error en el registro o en una de las comprobaciones mencionadas anteriormente
+        """
         user = self.entuser.get_text()
         passwd = self.entpasswd.get_text()
         rpass = self.entpass2.get_text()
@@ -172,7 +184,18 @@ class Restaurante():
                     self.entpass2.set_text("")
                     self.entpasswd.set_text("")
                 except:
-                    print("error")
+                    self.lblerr.set_text("El usuario ya existe en la base de datos")
+                    self.vendialog.show()
+                    mixer.music.play()
+            else:
+                self.lblerr.set_text("Las contraseñas no coinciden")
+                self.vendialog.show()
+                mixer.music.play()
+        else:
+            self.lblerr.set_text("Debe cubrir los campos")
+            self.vendialog.show()
+            mixer.music.play()
+
 
     def reserva(self, widget, data=None):
         self.btnactual = widget
@@ -254,8 +277,13 @@ class Restaurante():
                         mun = mod[index][:2][0]
                         
                         fila = (dni, nom, apel, dir, prov, mun)
-                        BDres.altaCliente(self.listclientes, self.treeclientes, fila)
-                        self.cleanCli()
+                        try:
+                            BDres.altaCliente(self.listclientes, self.treeclientes, fila)
+                            self.cleanCli()
+                        except:
+                            self.lblerr.set_text("El cliente ya existe")
+                            self.vendialog.show()
+                            mixer.music.play()
                     else:
                         print("No seleccionado el municipio")
                         self.lblerr.set_text("No seleccionado el municipio")
@@ -263,7 +291,7 @@ class Restaurante():
                         mixer.music.play()
                 else:
                     print("No seleccionada la provincia")
-                    self.lblerr.set_text("No seleccionado la provincia")
+                    self.lblerr.set_text("No seleccionada la provincia")
                     self.vendialog.show()
                     mixer.music.play()
                 
@@ -277,17 +305,6 @@ class Restaurante():
             self.lblerr.set_text("DNI incorrecto")
             self.vendialog.show()
             mixer.music.play()
-            
-            # para reactivar los botones
-            # self.btnactual.set_sensitive(True)
-            # self.cambiobtn(self.btnactual)
-            
-            # para guardar la contraseña
-            # import hashlib
-
-            # sh = hashlib.sha1()
-            # sh.update('password')
-            # hash_value = sh.hexdigest()
             
     def cleanCli(self):
         self.entdni.set_text("")
@@ -310,6 +327,11 @@ class Restaurante():
         self.cleanProd()
     
     def selectcli(self, widget):
+        """
+            Carga los datos del cliente seleccionado en los campos de texto y combobox,
+            para la carga de los combobox se hace uso de los metodos recuperarprovincia y 
+            recuperarmunicipio del modulo BDCA
+        """
         sel = self.treeclientes.get_selection()
         (tm, ti) = sel.get_selected()
         dni = tm.get_value(ti, 0)
@@ -330,12 +352,13 @@ class Restaurante():
     def selectprod(self, widget):
         sel = self.treeserv.get_selection()
         (tm, ti) = sel.get_selected()
-        prod = tm.get_value(ti, 1)
-        prec = Decimal(sub(r'[^\d.]', '', tm.get_value(ti, 2))) / 100
-        self.servicio = tm.get_value(ti, 0)
-        self.entserv.set_text(prod)
-        self.entservicio.set_text(prod)
-        self.entprec.set_text(str(prec))
+        if ti is not None:
+            prod = tm.get_value(ti, 1)
+            prec = Decimal(sub(r'[^\d.]', '', tm.get_value(ti, 2))) / 100
+            self.servicio = tm.get_value(ti, 0)
+            self.entserv.set_text(prod)
+            self.entservicio.set_text(prod)
+            self.entprec.set_text(str(prec))
     
     def cambiobtn(self, widget):
         if widget == self.btn41:
@@ -429,6 +452,15 @@ class Restaurante():
         fichzip.write("Restaurante", "./Restaurante" , zipfile.ZIP_DEFLATED)  
         fichzip.close() 
         subprocess.Popen(["xdg-open", '/home/' + getpass.getuser() + '/copias/'])
+    
+    def modprecio(self,widget):
+        precio = float(self.entprec.get_text())
+        BDres.modprecio(self.servicio,precio,self.treeserv,self.listserv)
+        self.entprec.set_text("")
+        self.entserv.set_text("")
+        self.entservicio.set_text("")
+        self.servicio = 0
+        
     
     def set_style(self):
         """

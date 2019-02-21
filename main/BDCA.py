@@ -18,6 +18,10 @@ except sqlite3.OperationalError as e:
     
 
 def cargarCombo(list):
+    """
+        Anade todas las provincias al combo de provincias
+    """
+    
     try:
         cur.execute("select provincia from Provincias")
         res = cur.fetchall()
@@ -29,6 +33,9 @@ def cargarCombo(list):
         print(e)
     
 def cargarmun(listmun,prov):
+    """
+        Anade todos los municipios de una determinada provincia al combobox de municipios
+    """
     try:
         cur.execute("select municipio from municipios where provincia_id = "+str(prov+1)+" order by id")
         res = cur.fetchall()
@@ -41,6 +48,9 @@ def cargarmun(listmun,prov):
         
         
 def recuperarprovincia(provincia):
+    """
+        Recoge el id de una provincia de la base de datos y lo devuelve restandole 1 para que pueda ser usado en el combobox
+    """
     try:
         cur.execute("select id from provincias where provincia ='" + provincia + "'")
 
@@ -54,6 +64,10 @@ def recuperarprovincia(provincia):
         conex.rollback
 
 def recuperarmunicipio(provincia,localidad):
+    """
+        recibiendo un id de provincia y un municipo obtiene el id del municipio y los id maximo y minimo de municipios de esa provincia,
+        con esos datos traduce el id del municipio a la posicion que este tendra en el combobox y devuelve esta posicion
+    """
     try:
         cur.execute("select id from municipios where municipio='"+localidad+"' ORDER BY ID")
         print(localidad)
