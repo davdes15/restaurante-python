@@ -23,6 +23,9 @@ except sqlite3.OperationalError as e:
     
     
 def altaCliente(listclientes, treeclientes, row):
+    '''
+        Introduce un cliente a la base de datos y llama al metodo para introducirlo en el treeview
+    '''
     try:
         cur.execute("insert into clientes (dni,nombre,apellidos,direccion,provincia,ciudad) values(?,?,?,?,?,?)", row)
         conex.commit()
@@ -32,6 +35,9 @@ def altaCliente(listclientes, treeclientes, row):
 
         
 def cargarCli(listclientes, treeclientes):
+    '''
+        Carga la lista de clientes
+    '''
     try:
         cur.execute("select * from clientes")
         listclientes.clear()
@@ -44,7 +50,7 @@ def cargarCli(listclientes, treeclientes):
         
 def login(user, ps):
     """
-        Recibe un usuario y contraseña de la ventana de login, busca el usuario y la contraseña en la base de datos,
+        Recibe un usuario y contrasena de la ventana de login, busca el usuario y la contrasena en la base de datos,
         comprueba lo que recibe coincide lo que hay en la base de datos mediante el metodo pbkdf2_sha256.verify("texto",hash),
         de la libreria passlib y devuelve True y el id del camarero si es correcto o False si el login no es correcto.
     """
@@ -64,7 +70,7 @@ def login(user, ps):
 
 def registrar(user, pwd, listcamarero, treecamareros):
     """
-        obtiene el hash de la contraseña que recibe y añade al camarero a la base de datos si no existe ya
+        obtiene el hash de la contrasena que recibe y anade al camarero a la base de datos si no existe ya
     """
     try:
         passwd = pbkdf2_sha256.hash(pwd) 
@@ -77,6 +83,9 @@ def registrar(user, pwd, listcamarero, treecamareros):
 
 
 def getcamarero(idfactura):
+    '''
+        Obtiene el nombre del camarero de la base de datos
+    '''
     try:
         cur.execute("select nombre from camareros where id = (select camarero from facturas where id ='" + str(idfactura) + "')")
         res = cur.fetchall()
@@ -87,6 +96,9 @@ def getcamarero(idfactura):
                 
 
 def cargarcamareros(listcamarero, treecamareros):
+    '''
+        Carga la lista de camareros ordenada por id
+    '''
     try:
         listcamarero.clear()
         cur.execute("select id, nombre from camareros order by id")
@@ -99,6 +111,9 @@ def cargarcamareros(listcamarero, treecamareros):
     
         
 def altaserv(listserv, treeserv, row):
+    '''
+        Introduce un servicio en la base de datos
+    '''
     try:
         cur.execute("insert into servicios (servicio,precio) values(?,?)", row)
         conex.commit()
@@ -116,6 +131,9 @@ def altaserv(listserv, treeserv, row):
         
         
 def cargaserv(listserv, treeserv):
+    '''
+        carga la lista de servicios
+    '''
     try:
         cur.execute("select * from servicios")
         rows = cur.fetchall()
@@ -131,6 +149,9 @@ def cargaserv(listserv, treeserv):
         
         
 def cargamesas(dicmesas, treemesas, listmesas):
+    '''
+        Carga la lista de mesas de la base de datos
+    '''    
     try:
         cur.execute("select * from mesas")
         rows = cur.fetchall()
@@ -163,6 +184,9 @@ def cargamesas(dicmesas, treemesas, listmesas):
 
         
 def insmesa(dicmesas, treemesas, listmesas, fila):
+    '''
+        marca una mesa como ocupada e introduce una nueva factura
+    '''
     try:
         cur.execute("update mesas set ocupada = 1 where id = " + fila[2] + "")
         cur.execute("insert into facturas (cliente,camarero,mesa,fecha) values(?,?,?,?)", fila)
@@ -174,6 +198,9 @@ def insmesa(dicmesas, treemesas, listmesas, fila):
 
         
 def checkOcupada(mesa):
+    '''
+        comprueba si una mesa está ocupada
+    '''
     try:
         cur.execute("select ocupada from mesas where id = " + str(mesa))
         rows = cur.fetchall()
@@ -184,6 +211,9 @@ def checkOcupada(mesa):
         print(e)
 
 def modprecio(serv,preci,treeserv,listserv):
+    '''
+        Modifica el precio de un servicio en la base de datos
+    '''
     try:
         cur.execute("update servicios set precio="+str(preci)+" where id = "+str(serv))
         conex.commit()
@@ -194,6 +224,9 @@ def modprecio(serv,preci,treeserv,listserv):
 
         
 def checkfacturas(treefact, listfact, id):
+    '''
+        carga las facturas de una mesa
+    '''
     try:
         cur.execute("select * from facturas where mesa=" + str(id))
         rows = cur.fetchall()
@@ -211,6 +244,9 @@ def checkfacturas(treefact, listfact, id):
         
        
 def verlineas(treelineas, listlineas, id):
+    '''
+        carga las lineas de factura de la base de datos
+    '''
     try:
         cur.execute("select idventa,factura,(select servicio from servicios where id = producto),cantidad from lineasfactura where factura=" + str(id)) 
         rows = cur.fetchall()
@@ -224,6 +260,9 @@ def verlineas(treelineas, listlineas, id):
 
 
 def addlinea(treelineas, listlineas, fila):
+    '''
+        Introduce una nueva linea a una factura
+    '''
     try:
         cur.execute("select * from lineasfactura where factura = "+str(fila[0])+" and producto = "+str(fila[1]))
         lin = cur.fetchall()
@@ -242,6 +281,9 @@ def addlinea(treelineas, listlineas, fila):
 
         
 def getfact(id):
+    '''
+        recoge una factura especifica
+    '''
     try:
         cur.execute("select * from facturas where id =" + str(id))
         f = cur.fetchall()
@@ -251,6 +293,9 @@ def getfact(id):
         
         
 def getlineas(id):
+    '''
+        recoge las lineas de factura de una factura especifica
+    '''
     try:
         cur.execute("select * from lineasfactura where factura=" + str(id))
         f = cur.fetchall()
@@ -260,6 +305,9 @@ def getlineas(id):
 
         
 def getnompre(idp):
+    '''
+        Busca el nombre de un servicio y su precio y los devuelve
+    '''
     try:
         cur.execute("select servicio,precio from servicios where id=" + str(idp))
         f = cur.fetchone()
@@ -269,6 +317,9 @@ def getnompre(idp):
 
 
 def pagar(id, mesa, listfact, treefact, listcom):
+    '''
+        Marca una factura como pagada y desocupa la mesa correspondiente
+    '''
     try:
         cur.execute("update facturas set pagada=1 where id =" + str(id))
         cur.execute("update mesas set ocupada=0 where id=" + str(mesa))

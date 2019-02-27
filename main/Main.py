@@ -125,13 +125,22 @@ class Restaurante():
        # self.comboprov.set_entry_text_column(1)
 
     def salir(self, widget, data=None):
+        '''
+        Cierra el programa
+        '''
         Gtk.main_quit()
         
     def about(self, widget):
+        '''
+        Muestra la ventana de about
+        '''
         print(self.venabout)
         self.venabout.show()
         
     def hide(self, widget):
+        '''
+        Oculta la ventana de error de login
+        '''
         self.venerrlog.hide()
         
     def hidedialog(self,widget,data=None):
@@ -139,15 +148,17 @@ class Restaurante():
         
         
     def evtlog(self, window, event):
-        
+        '''
+        Ejecuta el metodo login cuando se pulsa enter en la caja de texto de la contrasena
+        '''
         if event.keyval == 65293:
             self.login(window)
     
     def login(self, widget, data=None):
         """
-            Recoge el usuario y la contraseña de los cuadros de texto y se los envía al metodo login, 
-            si son correctos accede a la ventana principal y guarda el id del camarero en una variable,
-            si no sacará un aviso dicienndo que el usuario o la contraseña son incorrectos
+        Recoge el usuario y la contrasena de los cuadros de texto y se los envia al metodo login, 
+        si son correctos accede a la ventana principal y guarda el id del camarero en una variable,
+        si no sacará un aviso dicienndo que el usuario o la contrasena son incorrectos
         """
         user = self.entus.get_text().strip()
         ps = self.entps.get_text()
@@ -168,9 +179,9 @@ class Restaurante():
             
     def registrar(self, widget):
         """
-            Recoge el usuario y la contraseña dos veces, si no hay nada en blanco y las contraseñas
-            coinciden la envía al metodo registrar de BDres, si el usuario es registrado se limpian los campos,
-            si se da un error en el registro o en una de las comprobaciones mencionadas anteriormente
+        Recoge el usuario y la contraseña dos veces, si no hay nada en blanco y las contrasenas
+        coinciden la envía al metodo registrar de BDres, si el usuario es registrado se limpian los campos,
+        si se da un error en el registro o en una de las comprobaciones mencionadas anteriormente
         """
         user = self.entuser.get_text()
         passwd = self.entpasswd.get_text()
@@ -198,6 +209,9 @@ class Restaurante():
 
 
     def reserva(self, widget, data=None):
+        '''
+        este boton sirve para cambiar el color de los botones de mesa cuando hacemos click en ellos
+        '''
         self.btnactual = widget
         
         if not BDres.checkOcupada(self.dictidmesa[self.mesaant]):
@@ -256,11 +270,16 @@ class Restaurante():
         # self.combomun.set_sensitive(False)
       
     def updatemun(self, widget, data=None):
-       
+        '''
+        Recoge la provincia seleccionada en un combobox y carga en el otro todos los municipios de esa provincia
+        '''
         prov = self.comboprov.get_active()
         BDCA.cargarmun(self.listmun, prov)
     
     def altacli(self, widget, data=None):
+        '''
+        Recoge los datos del cliente que han sido introducidos, si existen y son correctos introduce al cliente en la base de datos
+        '''
         dni = self.entdni.get_text()
         nom = self.entnom.get_text()
         apel = self.entapel.get_text()
@@ -307,6 +326,9 @@ class Restaurante():
             mixer.music.play()
             
     def cleanCli(self):
+        ''' 
+        Limpia los cuadros de texto de la pantalla de introducir cliente, deja los combobox deseleccionados
+        '''
         self.entdni.set_text("")
         self.entapel.set_text("")
         self.entdir.set_text("")
@@ -316,10 +338,16 @@ class Restaurante():
         self.combomun.set_sensitive(False)
             
     def cleanProd(self):
+        '''
+        Limpia los campos de la ventana de productos
+        '''
         self.entserv.set_text("")
         self.entprec.set_text("")
             
     def altaprod(self, widget, data=None):
+        '''
+        Da de alta un producto en la base de datos
+        '''
         prod = self.entserv.get_text()
         prec = float(self.entprec.get_text())
         row = (prod, prec)
@@ -328,9 +356,9 @@ class Restaurante():
     
     def selectcli(self, widget):
         """
-            Carga los datos del cliente seleccionado en los campos de texto y combobox,
-            para la carga de los combobox se hace uso de los metodos recuperarprovincia y 
-            recuperarmunicipio del modulo BDCA
+        Carga los datos del cliente seleccionado en los campos de texto y combobox,
+        para la carga de los combobox se hace uso de los metodos recuperarprovincia y 
+        recuperarmunicipio del modulo BDCA
         """
         sel = self.treeclientes.get_selection()
         (tm, ti) = sel.get_selected()
@@ -350,6 +378,9 @@ class Restaurante():
         self.combomun.set_active(municipio-1)
         
     def selectprod(self, widget):
+        '''
+        Carga el producto seleccionado
+        '''
         sel = self.treeserv.get_selection()
         (tm, ti) = sel.get_selected()
         if ti is not None:
@@ -361,6 +392,9 @@ class Restaurante():
             self.entprec.set_text(str(prec))
     
     def cambiobtn(self, widget):
+        '''
+        Cambia la imagen del boton que lo llame por el de vacia correspondiente
+        '''
         if widget == self.btn41:
             widget.get_image().set_from_file("./mesa4vacia.png")
           
@@ -387,6 +421,9 @@ class Restaurante():
            
     # metodo para ocupar la mesa
     def ocupar(self, widget, data=None):
+        '''
+        Ocupa la mesa, le asigna el cliente seleccionado, sin no hay ninguno sera anonimo
+        '''
         sel = self.treeclientes.get_selection()
         (tm, ti) = sel.get_selected()
         cliente = "anonimo"
@@ -398,6 +435,9 @@ class Restaurante():
             BDres.insmesa(self.dictmesas, self.treemesas, self.listmesas, fila)
             
     def verfact(self, widget):
+        '''
+        carga la lista de facturas de la mesa seleccionada en la lista de mesas
+        '''
         sel = self.treemesas.get_selection()
         self.listcom.clear()
         self.entud.set_editable(False)
@@ -407,6 +447,9 @@ class Restaurante():
             BDres.checkfacturas(self.treefact, self.listfact, self.idmesa)
             
     def verlineas(self, widget, data=None):
+        '''
+        Carga la lista de lineas de factura de la factura seleccionada
+        '''
         self.entud.set_editable(True)
         sel = self.treefact.get_selection()
         (tm, ti) = sel.get_selected()
@@ -416,6 +459,9 @@ class Restaurante():
             BDres.verlineas(self.treecom, self.listcom, self.id)
             
     def addlineaf(self, widget):
+        '''
+        Permite introducir lineas a facturas que todavia no han sido pagadas
+        '''
         try:
             unidades = int(self.entud.get_text())
             if self.pagada == 0:
@@ -433,6 +479,9 @@ class Restaurante():
             mixer.music.play()
         
     def pagar(self, widget):
+        '''
+        Crea un pdf de la factura seleccionada y lo muestra
+        '''
         sacarpdf.genfact(self.id)
         dir = os.getcwd()
         os.system('/usr/bin/xdg-open ' + dir + '/factura_' + str(self.id) + '.pdf')
@@ -454,6 +503,9 @@ class Restaurante():
         subprocess.Popen(["xdg-open", '/home/' + getpass.getuser() + '/copias/'])
     
     def modprecio(self,widget):
+        '''
+        Permite modificar el precio de un producto
+        '''
         precio = float(self.entprec.get_text())
         BDres.modprecio(self.servicio,precio,self.treeserv,self.listserv)
         self.entprec.set_text("")
